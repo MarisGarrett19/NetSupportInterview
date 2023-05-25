@@ -44,9 +44,10 @@ public class GroupService : IGroupService
             throw new ArgumentException("Id must not be empty.", nameof(id));
         }
 
+        //added a where condition to make sure it returns the one the user expects.
         return _appDbContext.Groups
             .Include(m => m.Members)
-            .First();
+            .First(m => m.Id == id);
     }
 
     /// <inheritdoc />
