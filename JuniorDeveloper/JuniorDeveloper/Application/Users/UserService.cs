@@ -1,28 +1,72 @@
 ﻿using Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users;
 
 public class UserService : IUserService
 {
-    /// <inheritdoc />
-    public Task Add(User user, CancellationToken cancellationToken)
-        => throw new NotImplementedException();
+    private readonly IAppDbContext _appDbContext;
+
+    public UserService(IAppDbContext appDbContext)
+    {
+        _appDbContext = appDbContext;
+    }
 
     /// <inheritdoc />
-    public Task Delete(Guid userId, CancellationToken cancellationToken)
-        => throw new NotImplementedException();
+    public async Task Add(User user, CancellationToken cancellationToken)
+    {
+        //added a check to see if the user email is already in use.
+        if (await _appDbContext.Users.Where(m => m.Email == user.Email).AnyAsync())
+        {
+            throw new ArgumentException("Can't add a user that already exists.");
+        }
+
+        _appDbContext.Users.Add(user);
+
+        await _appDbContext.SaveChangesAsync(cancellationToken);
+    }
 
     /// <inheritdoc />
-    public Task<List<User>> GetAll(CancellationToken cancellationToken)
-        => throw new NotImplementedException();
+    public async Task Delete(Guid userId, CancellationToken cancellationToken)
+    {
+        _appDbContext.Users.Remove(await GetById(userId, cancellationToken));
+
+        await _appDbContext.SaveChangesAsync();
+    }
 
     /// <inheritdoc />
-    public Task<User> GetById(Guid userId, CancellationToken cancellationToken)
-        => throw new NotImplementedException();
+    public async Task<List<User>> GetAll(CancellationToken cancellationToken)
+    {
+        return await _appDbContext.Users
+            .ToListAsync(cancellationToken);
+    }
 
     /// <inheritdoc />
-    public Task Update(UpdateUserOptions options, CancellationToken cancellationToken)
-        => throw new NotImplementedException();
+    public async Task<User> GetById(Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("Id must not be empty.", nameof(userId));
+        }
+
+        return await _appDbContext.Users
+            .FirstAsync(m => m.Id == userId);
+    }
+
+    /// <inheritdoc />
+    public async Task Update(UpdateUserOptions options, CancellationToken cancellationToken)
+    {
+        var user = await GetById(options.UserId, cancellationToken);
+
+        if (await _appDbContext.Users.Where(m => m.Email == options.Email && m.Id != options.UserId).AnyAsync())
+        {
+            throw new ArgumentException("Can't add a user that already exists.");
+        }
+
+        user.Email = options.Email;
+
+        await _appDbContext.SaveChangesAsync();
+    }
 }
 
 public interface IUserService
