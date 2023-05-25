@@ -16,7 +16,7 @@ public class GroupService : IGroupService
     public async Task Add(Group group, CancellationToken cancellationToken)
     {
         //added a check to see if the group name is already in use.
-        if (_appDbContext.Groups.Where(m => m.Name == group.Name).Any())
+        if (await _appDbContext.Groups.Where(m => m.Name == group.Name).AnyAsync())
         {
             throw new ArgumentException("Can't add a group that already exists.");
         }
@@ -27,23 +27,23 @@ public class GroupService : IGroupService
     }
 
     /// <inheritdoc />
-    public void Delete(Guid id)
+    public async Task Delete(Guid id)
     {
-        _appDbContext.Groups.Remove(GetById(id));
+        _appDbContext.Groups.Remove(await GetById(id));
 
-        _appDbContext.SaveChanges();
+        await _appDbContext.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public List<Group> GetAll()
+    public async Task<List<Group>> GetAll()
     {
-        return _appDbContext.Groups
+        return await _appDbContext.Groups
             .Include(m => m.Members)
-            .ToList();
+            .ToListAsync();
     }
 
     /// <inheritdoc />
-    public Group GetById(Guid id)
+    public async Task<Group> GetById(Guid id)
     {
         if (id == Guid.Empty)
         {
@@ -51,25 +51,25 @@ public class GroupService : IGroupService
         }
 
         //added a where condition to make sure it returns the one the user expects.
-        return _appDbContext.Groups
+        return await _appDbContext.Groups
             .Include(m => m.Members)
-            .First(m => m.Id == id);
+            .FirstAsync(m => m.Id == id);
     }
 
     /// <inheritdoc />
-    public void Update(UpdateGroupOptions options)
+    public async Task Update(UpdateGroupOptions options)
     {
-        var group = GetById(options.GroupId);
+        var group = await GetById(options.GroupId);
 
         //added a check to see if the group name is already in use but not by the group being updated.
-        if (_appDbContext.Groups.Where(m => m.Name == options.Name && m.Id != options.GroupId).Any())
+        if (await _appDbContext.Groups.Where(m => m.Name == options.Name && m.Id != options.GroupId).AnyAsync())
         {
             throw new ArgumentException("Can't add a group that already exists.");
         }
 
         group.Name = options.Name;
 
-        _appDbContext.SaveChanges();
+        await _appDbContext.SaveChangesAsync();
     }
 }
 
@@ -88,20 +88,20 @@ public interface IGroupService
     ///     Delete the specified group.
     /// </summary>
     /// <param name="id"></param>
-    void Delete(Guid id);
+    Task Delete(Guid id);
 
     /// <summary>
     ///     Get all of the groups.
     /// </summary>
     /// <returns></returns>
-    List<Group> GetAll();
+    Task<List<Group>> GetAll();
 
     /// <summary>
     ///     Get the group with the specified id.
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    Group GetById(Guid id);
+    Task<Group> GetById(Guid id);
 
     /// <summary>
     ///     Update the groups details.
@@ -109,7 +109,7 @@ public interface IGroupService
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    void Update(UpdateGroupOptions options);
+    Task Update(UpdateGroupOptions options);
 }
 
 public sealed class UpdateGroupOptions
