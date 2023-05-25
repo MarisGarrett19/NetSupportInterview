@@ -27,15 +27,15 @@ public class GroupService : IGroupService
     }
 
     /// <inheritdoc />
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid id, CancellationToken cancellationToken)
     {
-        _appDbContext.Groups.Remove(await GetById(id));
+        _appDbContext.Groups.Remove(await GetById(id, cancellationToken));
 
         await _appDbContext.SaveChangesAsync();
     }
 
     /// <inheritdoc />
-    public async Task<List<Group>> GetAll()
+    public async Task<List<Group>> GetAll(CancellationToken cancellationToken)
     {
         return await _appDbContext.Groups
             .Include(m => m.Members)
@@ -43,7 +43,7 @@ public class GroupService : IGroupService
     }
 
     /// <inheritdoc />
-    public async Task<Group> GetById(Guid id)
+    public async Task<Group> GetById(Guid id, CancellationToken cancellationToken)
     {
         if (id == Guid.Empty)
         {
@@ -57,9 +57,9 @@ public class GroupService : IGroupService
     }
 
     /// <inheritdoc />
-    public async Task Update(UpdateGroupOptions options)
+    public async Task Update(UpdateGroupOptions options, CancellationToken cancellationToken)
     {
-        var group = await GetById(options.GroupId);
+        var group = await GetById(options.GroupId, cancellationToken);
 
         //added a check to see if the group name is already in use but not by the group being updated.
         if (await _appDbContext.Groups.Where(m => m.Name == options.Name && m.Id != options.GroupId).AnyAsync())
@@ -88,20 +88,20 @@ public interface IGroupService
     ///     Delete the specified group.
     /// </summary>
     /// <param name="id"></param>
-    Task Delete(Guid id);
+    Task Delete(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Get all of the groups.
     /// </summary>
     /// <returns></returns>
-    Task<List<Group>> GetAll();
+    Task<List<Group>> GetAll(CancellationToken cancellationToken);
 
     /// <summary>
     ///     Get the group with the specified id.
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    Task<Group> GetById(Guid id);
+    Task<Group> GetById(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Update the groups details.
@@ -109,7 +109,7 @@ public interface IGroupService
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task Update(UpdateGroupOptions options);
+    Task Update(UpdateGroupOptions options, CancellationToken cancellationToken);
 }
 
 public sealed class UpdateGroupOptions

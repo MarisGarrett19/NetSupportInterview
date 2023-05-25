@@ -28,35 +28,35 @@ public class GroupsController : ControllerBase
     [HttpDelete("{groupId:guid}")]
     public async Task<IActionResult> Delete(Guid groupId, CancellationToken cancellationToken)
     {
-        await _groupService.Delete(groupId);
+        await _groupService.Delete(groupId, cancellationToken);
 
         return Ok();
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var groups = await _groupService.GetAll();
+        var groups = await _groupService.GetAll(cancellationToken);
 
         return Ok(groups);
     }
 
     [HttpGet("{groupId:guid}")]
-    public async Task<IActionResult> GetById(Guid groupId)
+    public async Task<IActionResult> GetById(Guid groupId, CancellationToken cancellationToken)
     {
-        var group = await _groupService.GetById(groupId);
+        var group = await _groupService.GetById(groupId, cancellationToken);
 
         return Ok(group);
     }
 
     [HttpPatch]
-    public async Task<IActionResult> Update(UpdateGroupRequest request)
+    public async Task<IActionResult> Update(UpdateGroupRequest request, CancellationToken cancellationToken)
     {
         await _groupService.Update(new UpdateGroupOptions
         {
             GroupId = request.GroupId,
             Name = request.Name,
-        });
+        }, cancellationToken);
 
         return Ok();
     }
