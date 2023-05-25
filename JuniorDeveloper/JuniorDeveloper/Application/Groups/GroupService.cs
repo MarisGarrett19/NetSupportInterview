@@ -15,6 +15,12 @@ public class GroupService : IGroupService
     /// <inheritdoc />
     public async Task Add(Group group, CancellationToken cancellationToken)
     {
+        //added a check to see if the group name is already in use.
+        if (_appDbContext.Groups.Where(m => m.Name == group.Name).Any())
+        {
+            throw new ArgumentException("Can't add a group that already exists.");
+        }
+
         _appDbContext.Groups.Add(group);
 
         await _appDbContext.SaveChangesAsync(cancellationToken);
@@ -54,6 +60,12 @@ public class GroupService : IGroupService
     public void Update(UpdateGroupOptions options)
     {
         var group = GetById(options.GroupId);
+
+        //added a check to see if the group name is already in use but not by the group being updated.
+        if (_appDbContext.Groups.Where(m => m.Name == options.Name && m.Id != options.GroupId).Any())
+        {
+            throw new ArgumentException("Can't add a group that already exists.");
+        }
 
         group.Name = options.Name;
 
